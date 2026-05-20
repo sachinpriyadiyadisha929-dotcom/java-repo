@@ -67,29 +67,23 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
-            steps {
-                sh '''
-                ssh ubuntu@43.205.114.244 << EOF
+       stage('Deploy to EC2') {
+    steps {
+        sh '''
+        ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/test-key.pem ubuntu@43.205.114.244 << EOF
 
-                aws ecr get-login-password --region ap-south-1 | \
-                docker login --username AWS --password-stdin \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+        aws ecr get-login-password --region ap-south-1 | \
+        docker login --username AWS --password-stdin 044744845748.dkr.ecr.ap-south-1.amazonaws.com
 
-                docker stop java-app || true
-                docker rm java-app || true
+        docker pull 044744845748.dkr.ecr.ap-south-1.amazonaws.com/java-app-repo:${BUILD_NUMBER}
 
-                docker pull \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:${IMAGE_TAG}
+        docker stop java-app || true
+        docker rm java-app || true
 
-                docker run -d \
-                --name java-app \
-                -p 8080:8080 \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:${IMAGE_TAG}
+        docker run -d --name java-app -p 8080:8080 \
+        044744845748.dkr.ecr.ap-south-1.amazonaws.com/java-app-repo:${BUILD_NUMBER}
 
-                EOF
-                '''
-            }
-        }
+        EOF
+        '''
     }
 }
