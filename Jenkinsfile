@@ -19,7 +19,8 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/sachinpriyadiyadisha929-dotcom/java-repo.git'
+		git branch: 'main',
+                url: 'https://github.com/sachinpriyadiyadisha929-dotcom/java-repo.git'
             }
         }
 
