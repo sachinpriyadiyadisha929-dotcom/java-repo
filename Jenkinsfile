@@ -66,24 +66,31 @@ pipeline {
                 '''
             }
         }
-
-      stage('Deploy to EC2') {
-  steps {
+	stage('Deploy to EC2') {
+    steps {
         sh """
-        ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/test-key.pem ubuntu@43.205.114.244 << 'EOF'
+ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/test-key.pem ubuntu@43.205.114.244 << EOF
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 044744845748.dkr.ecr.ap-south-1.amazonaws.com
 
-        aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 044744845748.dkr.ecr.ap-south-1.amazonaws.com
+docker pull 044744845748.dkr.ecr.ap-south-1.amazonaws.com/java-app-repo:${BUILD_NUMBER}
 
-        docker pull 044744845748.dkr.ecr.ap-south-1.amazonaws.com/java-app-repo:${BUILD_NUMBER}
+# Stop and remove old container if exists
+docker stop java-app || true
+docker rm java-app || true
 
-        docker stop java-app || true
-        docker rm java-app || true
+# Remove any process using port 8080
+sudo fuser -k 8080/tcp || true
 
-        docker run -d --name java-app -p 8080:8080 044744845748.dkr.ecr.ap-south-1.amazonaws.com/java-app-repo:${BUILD_NUMBER}
+# Run new container
+docker run -d --name java-app -p 8080:8080 \
+044744845748.dkr.ecr.ap-south-1.amazonaws.com/java-app-repo:${BUILD_NUMBER}
 
-        EOF
-        """
+EOF
+"""
     }
 }
+
 }
+
 }
+
